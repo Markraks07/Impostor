@@ -1,6 +1,6 @@
 // === CONFIGURACIÓN SUPABASE ===
-const SUPABASE_URL = 'https://TU_PROYECTO.supabase.co';          // ← CAMBIAR
-const SUPABASE_ANON_KEY = 'TU_ANON_PUBLIC_KEY';                   // ← CAMBIAR
+const SUPABASE_URL = 'https://nrxrtpoaldkwyoeurmuv.supabase.co';          // ← CAMBIAR
+const SUPABASE_ANON_KEY = 'sb_publishable_7SBqbTCTRKt28o2ruUqG5A_sV4pfPI6';                   // ← CAMBIAR
 
 const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -237,3 +237,4 @@ messageInput.addEventListener('keypress', e => {
 
 voteBtn.onclick = startVote;
 leaveBtn.onclick = leaveRoom;
+
