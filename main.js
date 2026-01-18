@@ -1,105 +1,239 @@
-// 🔥 CONFIGURACIÓN SUPABASE
-const supabaseUrl = 'https://nrxrtpoaldkwyoeurmuv.supabase.co';
-const supabaseKey = 'sb_publishable_7SBqbTCTRKt28o2ruUqG5A_sV4pfPI6';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+// === CONFIGURACIÓN SUPABASE ===
+const SUPABASE_URL = 'https://TU_PROYECTO.supabase.co';          // ← CAMBIAR
+const SUPABASE_ANON_KEY = 'TU_ANON_PUBLIC_KEY';                   // ← CAMBIAR
 
-// Palabras y pistas
-const WORDS = [
-  { w: "Fiesta", h: "Alcohol y música" },
-  { w: "Profesor", h: "Odia este juego" },
-  { w: "Suspender", h: "Miedo estudiantil" },
-  { w: "Botellón", h: "Juventud española" },
-  { w: "Examen", h: "Pesadilla" }
-];
+const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let me = {}, roomCode = '';
+// === VARIABLES DE ESTADO ===
+let currentRoomCode = null;
+let currentPlayerId = null;
+let currentNickname = null;
+let isImpostor = false;
+let myWord = '';
 
-// Botones
-document.getElementById('joinBtn').addEventListener('click', joinRoom);
-document.getElementById('goGameBtn').addEventListener('click', goGame);
-document.getElementById('sendBtn').addEventListener('click', sendMsg);
-document.getElementById('voteBtn').addEventListener('click', startVote);
+// === ELEMENTOS DOM ===
+const loginScreen  = document.getElementById('login-screen');
+const gameScreen   = document.getElementById('game-screen');
+const nicknameInput = document.getElementById('nickname');
+const roomCodeInput = document.getElementById('roomCode');
+const joinBtn      = document.getElementById('joinBtn');
+const createBtn    = document.getElementById('createBtn');
+const messageInput = document.getElementById('messageInput');
+const sendBtn      = document.getElementById('sendBtn');
+const chatMessages = document.getElementById('chat-messages');
+const roleMessage  = document.getElementById('role-message');
+const roomTitle    = document.getElementById('roomTitle');
+const playersCount = document.getElementById('players-count');
+const voteBtn      = document.getElementById('voteBtn');
+const leaveBtn     = document.getElementById('leaveBtn');
 
-// FUNCIONES
-async function joinRoom() {
-  const n = document.getElementById('name').value.trim();
-  const code = document.getElementById('room').value.trim();
-  if (!n || !code) return alert('Nombre y sala obligatorios');
+// === UTILIDAD ===
+function showGameScreen() {
+  loginScreen.classList.add('hidden');
+  gameScreen.classList.remove('hidden');
+}
 
-  me.name = n;
-  me.id = Date.now() + Math.random();
-  roomCode = code;
+function addMessage(text, isSelf = false, sender = '') {
+  const div = document.createElement('div');
+  div.classList.add('message');
+  if (isSelf) {
+    div.classList.add('self');
+    div.textContent = text;
+  } else {
+    div.classList.add('other');
+    div.innerHTML = `<strong>${sender}:</strong> ${text}`;
+  }
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
 
-  const btn = document.getElementById('joinBtn');
-  btn.disabled = true;
-  btn.innerText = 'Entrando...';
+// === UNIRSE / CREAR SALA ===
+async function joinOrCreateRoom(create = false) {
+  let nick = nicknameInput.value.trim();
+  let code = roomCodeInput.value.trim().toUpperCase();
 
-  try {
-    // Revisar sala
-    let { data: room, error } = await supabase.from('rooms').select('*').eq('code', roomCode).single();
-    if (error && error.code !== 'PGRST116') throw error; // 116 = no encontrado
-    if (!room) {
-      const sel = WORDS[Math.floor(Math.random() * WORDS.length)];
-      await supabase.from('rooms').insert([{ code: roomCode, word: sel.w, hint: sel.h, impostor: me.id, turn: me.id }]);
-    }
+  if (!nick) return alert('Pon un apodo, gamberro');
+  if (!code && !create) return alert('Introduce código de sala');
 
-    // Insertar jugador
-    await supabase.from('players').insert([{ name: me.name, room: roomCode, id: me.id, role: 'pending' }]);
+  if (create) {
+    // Generar código aleatorio de 6 caracteres
+    code = Math.random().toString(36).substring(2,8).toUpperCase();
+  }
 
-    // Asignar rol (primer jugador = impostor)
-    const { data: players } = await supabase.from('players').select('*').eq('room', roomCode);
-    const isImp = players.length === 1;
-    await supabase.from('players').update({ role: isImp ? 'impostor' : 'legal' }).eq('id', me.id);
+  currentNickname = nick;
+  currentRoomCode = code;
 
-    showRole(isImp);
-    setupRealtime();
-  } catch (e) {
-    alert('Error al entrar: ' + e.message);
-    console.error(e);
-  } finally {
-    btn.disabled = false;
-    btn.innerText = 'Entrar';
+  // 1. Verificar/crear sala
+  let { data: room, error } = await supabase
+    .from('rooms')
+    .select('*')
+    .eq('code', code)
+    .single();
+
+  if (error && error.code !== 'PGRST116') { // no es "no rows"
+    return alert('Error al conectar con la sala 😭');
+  }
+
+  let isNewRoom = !room;
+
+  if (isNewRoom) {
+    const { data, error: insertErr } = await supabase
+      .from('rooms')
+      .insert({
+        code,
+        word: 'pizza',          // ← aquí iría tu banco de palabras
+        hint: 'comida redonda y rica',
+        impostor: null,         // se asignará al primer jugador
+        status: 'waiting'
+      })
+      .select()
+      .single();
+
+    if (insertErr) return alert('No se pudo crear la sala');
+    room = data;
+  }
+
+  // 2. Unir jugador
+  const { data: player, error: playerErr } = await supabase
+    .from('players')
+    .insert({
+      room_id: room.id,
+      nickname: nick,
+      is_impostor: false // por defecto no
+    })
+    .select()
+    .single();
+
+  if (playerErr) return alert('No pudiste entrar a la sala');
+
+  currentPlayerId = player.id;
+
+  // Si es la primera persona → es impostor
+  if (isNewRoom) {
+    await supabase
+      .from('rooms')
+      .update({ impostor: player.id })
+      .eq('id', room.id);
+  }
+
+  // Actualizar UI
+  roomTitle.textContent = `Sala: ${code}`;
+  showGameScreen();
+
+  // Suscribirse a cambios
+  subscribeToRoom();
+}
+
+// === SUSCRIPCIONES REALTIME ===
+function subscribeToRoom() {
+  // Chat
+  supabase
+    .channel(`room:${currentRoomCode}:chat`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat', filter: `room_code=eq.${currentRoomCode}` },
+      payload => {
+        const msg = payload.new;
+        const isSelf = msg.player_id === currentPlayerId;
+        addMessage(msg.content, isSelf, msg.nickname);
+      }
+    )
+    .subscribe();
+
+  // Jugadores (conteo y posible actualización de impostor)
+  supabase
+    .channel(`room:${currentRoomCode}:players`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'players', filter: `room_id=eq.${currentRoomCode}` },
+      async () => {
+        const { count } = await supabase
+          .from('players')
+          .select('*', { count: 'exact', head: true })
+          .eq('room_id', currentRoomCode);  // ← ojo: room_id es UUID
+
+        playersCount.textContent = `Jugadores: ${count || 0}`;
+
+        // Obtener mi rol actualizado
+        checkMyRole();
+      }
+    )
+    .subscribe();
+
+  // Actualización de sala (por si cambia impostor, palabra, etc.)
+  supabase
+    .channel(`room:${currentRoomCode}`)
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `code=eq.${currentRoomCode}` },
+      () => checkMyRole()
+    )
+    .subscribe();
+
+  // Cargar mi rol al entrar
+  checkMyRole();
+}
+
+async function checkMyRole() {
+  if (!currentPlayerId) return;
+
+  const { data: player } = await supabase
+    .from('players')
+    .select('is_impostor')
+    .eq('id', currentPlayerId)
+    .single();
+
+  const { data: room } = await supabase
+    .from('rooms')
+    .select('word, hint, impostor')
+    .eq('code', currentRoomCode)
+    .single();
+
+  isImpostor = player?.is_impostor || room?.impostor === currentPlayerId;
+
+  if (isImpostor) {
+    roleMessage.textContent = `Pista: ${room?.hint || '???'} `;
+    roleMessage.style.background = '#991b1b';
+  } else {
+    myWord = room?.word || '???';
+    roleMessage.textContent = `Tu palabra: ${myWord}`;
+    roleMessage.style.background = '#1e40af';
   }
 }
 
-// Mostrar rol
-async function showRole(isImp) {
-  document.getElementById('join').classList.add('hidden');
-  document.getElementById('role').classList.remove('hidden');
-  document.getElementById('roleText').innerText = isImp ? '😈 ERES EL IMPOSTOR' : '😇 ERES LEGAL';
-  const { data: room } = await supabase.from('rooms').select('*').eq('code', roomCode).single();
-  document.getElementById('secret').innerText = isImp ? 'PISTA: ' + room.hint : room.word;
+// === ENVIAR MENSAJE ===
+async function sendMessage() {
+  const text = messageInput.value.trim();
+  if (!text || !currentRoomCode) return;
+
+  await supabase
+    .from('chat')
+    .insert({
+      room_code: currentRoomCode,
+      player_id: currentPlayerId,
+      nickname: currentNickname,
+      content: text
+    });
+
+  messageInput.value = '';
 }
 
-// Entrar al juego
-function goGame() {
-  document.getElementById('role').classList.add('hidden');
-  document.getElementById('game').classList.remove('hidden');
+// === VOTAR (placeholder) ===
+function startVote() {
+  alert(`Votación iniciada en sala ${currentRoomCode}!\n(Próximamente: interfaz de votación real)`);
+  // Aquí iría: mostrar lista de jugadores, permitir click, insert en votes, contar...
 }
 
-// Realtime chat
-function setupRealtime() {
-  supabase.channel('room_' + roomCode)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'chat', filter: `room=eq.${roomCode}` }, payload => {
-      const d = document.createElement('div');
-      d.className='msg';
-      d.innerHTML='<b>'+payload.new.name+':</b> '+payload.new.text;
-      const chat = document.getElementById('chat');
-      chat.appendChild(d);
-      chat.scrollTop = 9999;
-    })
-    .subscribe();
+// === SALIR ===
+async function leaveRoom() {
+  if (currentPlayerId) {
+    await supabase.from('players').delete().eq('id', currentPlayerId);
+  }
+  location.reload();
 }
 
-// Enviar mensaje
-async function sendMsg() {
-  const t = document.getElementById('msg').value.trim();
-  if (!t) return;
-  await supabase.from('chat').insert([{ room: roomCode, name: me.name, text: t }]);
-  document.getElementById('msg').value = '';
-}
+// === EVENTOS ===
+joinBtn.onclick = () => joinOrCreateRoom(false);
+createBtn.onclick = () => joinOrCreateRoom(true);
 
-// Votación (básico)
-async function startVote() {
-  alert('Votación iniciada (implementar lógica completa en Supabase)');
-}
+sendBtn.onclick = sendMessage;
+messageInput.addEventListener('keypress', e => {
+  if (e.key === 'Enter') sendMessage();
+});
+
+voteBtn.onclick = startVote;
+leaveBtn.onclick = leaveRoom;
