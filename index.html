@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impostor Online 🕵️</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🕵️ El Impostor</h1>
+
+        <div id="screen-start" class="card">
+            <input type="text" id="username" placeholder="Tu nombre / Nick">
+            <div class="buttons">
+                <button id="createBtn" onclick="showSetup()">Crear Sala</button>
+                <button id="joinBtn" onclick="showJoin()">Unirse a Sala</button>
+            </div>
+        </div>
+
+        <div id="screen-setup" class="card hidden">
+            <h3>Configuración</h3>
+            <label>Nº Impostores:</label>
+            <input type="number" id="cfg-impostors" value="1" min="1" max="3">
+            <button class="confirm" onclick="conectar(true)">Crear y Entrar</button>
+        </div>
+
+        <div id="screen-join" class="card hidden">
+            <input type="text" id="roomCode" placeholder="Código de la Sala">
+            <button class="confirm" onclick="conectar(false)">Entrar</button>
+        </div>
+
+        <div id="screen-lobby" class="card hidden">
+            <h3>Sala: <span id="display-room">---</span></h3>
+
+            <div id="map-selector" style="margin-top: 15px;">
+                <p style="font-size: 0.8rem; margin-bottom: 5px; color: var(--primary);">🗳️ Vota el ambiente:</p>
+                <div class="buttons" style="flex-direction: row; gap: 5px;">
+                    <button onclick="votarMapa('espacio')" style="font-size: 0.7rem; padding: 8px;">🌌 Espacio</button>
+                    <button onclick="votarMapa('cyberpunk')" style="font-size: 0.7rem; padding: 8px;">🏙️
+                        Cyberpunk</button>
+                    <button onclick="votarMapa('infierno')" style="font-size: 0.7rem; padding: 8px;">🔥
+                        Infierno</button>
+                </div>
+            </div>
+
+            <div id="player-list"></div>
+            <div class="actions">
+                <button id="startBtn" class="hidden confirm" onclick="repartirRoles()">Comenzar Partida</button>
+                <p id="wait-msg">Esperando al anfitrión...</p>
+            </div>
+        </div>
+
+        <div id="screen-game" class="hidden">
+            <div id="turn-indicator">Preparando...</div>
+
+            <div class="role-card">
+                <div id="role-message">Asignando roles...</div>
+            </div>
+
+            <div class="chat-container">
+                <div id="chat-messages"></div>
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="Espera..." disabled>
+                    <button id="sendBtn" onclick="enviarMensaje()" disabled>Enviar</button>
+                </div>
+            </div>
+
+            <div id="decision-panel" class="card hidden">
+                <h3>Ronda terminada</h3>
+                <div class="buttons">
+                    <button onclick="votarDecision('ronda')">Otra ronda de pistas</button>
+                    <button class="vote" onclick="votarDecision('votar')">Ir a Votación</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-end" class="card hidden">
+            <h2 id="end-title">FIN DEL JUEGO</h2>
+            <p id="end-details"></p>
+            <div class="buttons" style="margin-top:20px">
+                <button id="btn-replay" class="hidden confirm" onclick="reinicioTotal()">Volver a Jugar</button>
+                <button class="leave" onclick="location.reload()">Salir al Inicio</button>
+            </div>
+        </div>
+
+        <div id="vote-modal" class="card hidden">
+            <h3>¿Quién es el impostor?</h3>
+            <div id="vote-options" class="buttons"></div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
