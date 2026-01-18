@@ -2,8 +2,9 @@
 const SUPABASE_URL = 'https://nrxrtpoaldkwyoeurmuv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_7SBqbTCTRKt28o2ruUqG5A_sV4pfPI6';
 
-// Usa el objeto global del CDN
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Usa la variable global que ya existe (del CDN)
+const { createClient } = supabase;
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // === VARIABLES DE ESTADO ===
 let currentRoomCode = null;
@@ -186,3 +187,4 @@ sendBtn.onclick = sendMessage;
 messageInput.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
 voteBtn.onclick = startVote;
 leaveBtn.onclick = leaveRoom;
+
