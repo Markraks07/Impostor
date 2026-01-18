@@ -1,8 +1,8 @@
 // === CONFIGURACIÓN SUPABASE ===
-const SUPABASE_URL = 'https://nrxrtpoaldkwyoeurmuv.supabase.co';          // ← CAMBIAR
-const SUPABASE_ANON_KEY = 'sb_publishable_7SBqbTCTRKt28o2ruUqG5A_sV4pfPI6';                   // ← CAMBIAR
+const SUPABASE_URL = 'https://nrxrtpoaldkwyoeurmuv.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_7SBqbTCTRKt28o2ruUqG5A_sV4pfPI6';
 
-const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // === VARIABLES DE ESTADO ===
 let currentRoomCode = null;
@@ -237,4 +237,5 @@ messageInput.addEventListener('keypress', e => {
 
 voteBtn.onclick = startVote;
 leaveBtn.onclick = leaveRoom;
+
 
