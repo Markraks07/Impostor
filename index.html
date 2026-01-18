@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Impostor Gamberro PRO – Supabase</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <h1>😈 Impostor Gamberro PRO – Supabase Realtime</h1>
+
+  <div id="join" class="card">
+    <input id="name" placeholder="Tu nombre o apodo 😏">
+    <input id="room" placeholder="Código de sala">
+    <button class="green" id="joinBtn">Entrar</button>
+    <p style="opacity:.6">Funciona para amigos y clase · Gratis</p>
+  </div>
+
+  <div id="role" class="card hidden">
+    <h3 id="roleText"></h3>
+    <p id="secret" style="font-size:22px"></p>
+    <button class="blue" id="goGameBtn">Entrar a la ronda</button>
+  </div>
+
+  <div id="game" class="card hidden">
+    <p id="turnInfo" class="turn"></p>
+    <div id="chat" class="chat"></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <input id="msg" placeholder="UNA palabra o frase corta">
+      <button class="green" id="sendBtn">Enviar</button>
+    </div>
+    <button class="red" style="margin-top:10px" id="voteBtn">🗳 VOTAR</button>
+  </div>
+
+  <div id="vote" class="card hidden">
+    <h3>🗳 ¿Quién es el impostor?</h3>
+    <div id="voteList" class="vote"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="main.js"></script>
+</body>
+</html>

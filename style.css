@@ -1,0 +1,15 @@
+body{margin:0;font-family:Arial;background:radial-gradient(circle at top,#1e293b,#020617);color:#fff}
+.app{max-width:1000px;margin:auto;padding:15px}
+h1{text-align:center}
+.hidden{display:none}
+.card{background:#020617;border:1px solid #1e293b;border-radius:16px;padding:15px;margin-top:10px}
+input,button{padding:10px;border-radius:10px;border:none;font-size:16px}
+button{cursor:pointer;font-weight:bold}
+.green{background:#22c55e}
+.red{background:#ef4444}
+.blue{background:#3b82f6}
+.chat{height:260px;overflow-y:auto;background:#020617;border:1px solid #1e293b;border-radius:12px;padding:10px}
+.msg{margin-bottom:6px}
+.system{color:#facc15;font-style:italic}
+.turn{color:#38bdf8}
+.vote button{width:100%;margin-top:6px}
