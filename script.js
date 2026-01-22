@@ -8,91 +8,10 @@ let decisiones = { ronda: 0, votar: 0, total: 0 };
 let votosExp = {};
 let votosMapas = { espacio: 0, cyberpunk: 0, infierno: 0 };
 
-
-
 // CONFIGURACIÓN SUPABASE
 const supabaseUrl = 'https://nrxrtpoaldkwyoeurmuv.supabase.co';
 const supabaseKey = 'sb_publishable_7SBqbTCTRKt28o2ruUqG5A_sV4pfPI6';
 const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-let sessionUser = null;
-
-// --- LOGIN / REGISTRO ---
-async function handleAuth(type) {
-    const email = document.getElementById('auth-email').value;
-    const password = document.getElementById('auth-pass').value;
-
-    const { data, error } = (type === 'login') 
-        ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password });
-
-    if (error) return alert(error.message);
-    
-    sessionUser = data.user;
-    // Si es registro, crear perfil en la tabla 'profiles'
-    if(type === 'signup') {
-        const userNick = prompt("Elige tu Nick público:");
-        await supabase.from('profiles').insert([{ id: sessionUser.id, username: userNick }]);
-    }
-
-    initApp();
-}
-
-async function initApp() {
-    document.getElementById('screen-auth').classList.add('hidden');
-    document.getElementById('screen-start').classList.remove('hidden');
-    document.getElementById('global-section').classList.remove('hidden');
-    
-    // Cargar mensajes antiguos del chat global
-    const { data: msgs } = await supabase.from('global_messages').select('*').order('created_at', { ascending: true }).limit(20);
-    msgs.forEach(m => renderGlobalMsg(m));
-
-    // Suscribirse al chat global en tiempo real
-    supabase.channel('global_chat')
-    .on('postgres_changes', { event: 'INSERT', table: 'global_messages' }, payload => {
-        renderGlobalMsg(payload.new);
-    }).subscribe();
-}
-
-// --- SISTEMA DE RANKING ESTILO KAHOOT ---
-async function finalizarPartida(ganadores) {
-    // ganadores = ['user1', 'user2']
-    for (let pName of ganadores) {
-        // Obtener puntos actuales
-        const { data } = await supabase.from('profiles').select('points').eq('username', pName).single();
-        // Sumar 100 puntos
-        await supabase.from('profiles').update({ points: (data.points || 0) + 100 }).eq('username', pName);
-    }
-    mostrarRanking();
-}
-
-async function mostrarRanking() {
-    const { data: topPlayers } = await supabase.from('profiles').select('username, points').order('points', { ascending: false }).limit(5);
-    
-    let rankingHTML = "<h3>🏆 TOP RANKING</h3>";
-    topPlayers.forEach((p, index) => {
-        rankingHTML += `<div class="player-tag">${index + 1}. ${p.username} - ${p.points}pts</div>`;
-    });
-    
-    document.getElementById('end-details').innerHTML = rankingHTML;
-}
-
-// --- CHAT GLOBAL MENSAJES ---
-async function sendGlobalMsg() {
-    const text = document.getElementById('global-input').value;
-    const { data: profile } = await supabase.from('profiles').select('username').eq('id', sessionUser.id).single();
-    
-    await supabase.from('global_messages').insert([{ user_id: sessionUser.id, username: profile.username, text }]);
-    document.getElementById('global-input').value = '';
-}
-
-function renderGlobalMsg(msg) {
-    const box = document.getElementById('global-chat-box');
-    box.innerHTML += `<div><strong>${msg.username}:</strong> ${msg.text}</div>`;
-    box.scrollTop = box.scrollHeight;
-}
-
-
 
 // --- LISTA DE PALABRAS ---
 const bibliotecaPalabras = ["Pizza", "TikTok", "Escuela", "Netflix", "Minecraft", "Fútbol", "YouTube", "Hamburguesa", "Examen", "Gimnasio", "Playa", "WhatsApp", "Profesor", "Mochila", "Dormir", "Cine", "Helado", "Perro", "Gato", "Televisión", "Videojuegos", "Bicicleta", "Navidad", "Verano", "Astronauta", "Pirata", "Zombie", "Dragón", "Castillo", "Espada", "Escudo", "Robot", "Teléfono", "Internet", "Instagram", "Música", "Guitarra", "Piano", "Cantante", "Estadio", "Avión", "Barco", "Tren", "Coche", "Moto", "Semáforo", "Policía", "Bombero", "Doctor", "Hospital", "Medicina", "Libro", "Biblioteca", "Lápiz", "Cuaderno", "Tarea", "Pizarra", "Parque", "Tobogán", "Piscina", "Montaña", "Nieve", "Esquí", "Camping", "Bosque", "Chocolate", "Caramelo", "Galleta", "Fruta", "Manzana", "Plátano", "Sushi", "Taco", "Batman", "Spiderman", "Ironman", "Superman", "Avengers", "Anime", "Naruto", "Pokémon", "Fortnite", "Roblox", "Among Us", "Discord", "Twitch", "Selfie", "Influencer", "Meme", "Dinero", "Diamante", "Oro", "Tesoro", "Mapa", "Brújula", "Reloj", "Tiempo", "Espacio", "León", "Tigre", "Elefante", "Jirafa", "Tiburón", "Delfín", "Ballena", "Águila", "Loro", "Serpiente", "Araña", "Abeja", "Mariposa", "Caballo", "Vaca", "Cerdo", "Oveja", "Gallina", "Conejo", "Ardilla", "Oso", "Lobo", "Pingüino", "Canguro", "Volcán", "Terremoto", "Tormenta", "Río", "Lago", "Océano", "Isla", "Desierto", "Jungla", "Cueva", "Estrella", "Luna", "Sol", "Planeta", "Cometa", "Nube", "Lluvia", "Rayo", "Arcoíris", "Flor", "Árbol", "Palmera", "Cactus", "Cama", "Sofá", "Silla", "Mesa", "Lámpara", "Espejo", "Cuadro", "Ventana", "Puerta", "Llave", "Nevera", "Horno", "Microondas", "Lavadora", "Ducha", "Toalla", "Jabón", "Cepillo", "Peine", "Ropa", "Zapatos", "Gorra", "Gafas", "Anillo", "Bolso", "Cartera", "Moneda", "Billete", "Cuchillo", "Tenedor", "Cuchara", "Plato", "Vaso", "Sartén", "Olla", "Martillo", "Destornillador", "Tijeras", "Pegamento", "Cinta", "Caja", "Maleta", "Paraguas", "Escoba", "Supermercado", "Restaurante", "Hotel", "Museo", "Zoo", "Acuario", "Aeropuerto", "Puerto", "Estación", "Puente", "Rascacielos", "Iglesia", "Ayuntamiento", "Cárcel", "Banco", "Cajero", "Farmacia", "Panadería", "Kiosco", "Peluquería", "Taller", "Garaje", "Gasolinera", "Parking", "Calle", "Avenida", "Plaza", "Fuente", "Estatua", "Monumento", "Faro", "Pirámide", "Teatro", "Discoteca", "Casino", "Circo", "Feria", "Pasta", "Arroz", "Sopa", "Ensalada", "Carne", "Pescado", "Huevo", "Queso", "Leche", "Yogur", "Mantequilla", "Pan", "Cereales", "Patatas", "Tomate", "Cebolla", "Zanahoria", "Lechuga", "Naranja", "Fresa", "Uva", "Sandía", "Limón", "Pastel", "Donut", "Muffin", "Zumo", "Refresco", "Café", "Té", "Agua", "Cerveza", "Vino", "Cocktail", "Kebab", "Paella", "Tortilla", "Croqueta", "Perrito", "Palomitas", "Baloncesto", "Tenis", "Golf", "Voleibol", "Rugby", "Béisbol", "Boxeo", "Kárate", "Surf", "Skate", "Patinaje", "Ajedrez", "Cartas", "Dados", "Baile", "Fiesta", "Boda", "Cumpleaños", "Concierto", "Festival", "Ópera", "Ballet", "Magia", "Malabares", "Pintura", "Escultura", "Fotografía", "Cámara", "Micrófono", "Auriculares", "Altavoz", "Radio", "Podcast", "Batería", "Violín", "Flauta", "Trompeta", "Abogado", "Arquitecto", "Ingeniero", "Científico", "Astrónomo", "Escritor", "Poeta", "Periodista", "Reportero", "Actor", "Director", "Modelo", "Cocinero", "Camarero", "Panadero", "Granjero", "Pescador", "Soldado", "General", "Rey", "Reina", "Príncipe", "Princesa", "Caballero", "Vikingo", "Samurái", "Ninja", "Espía", "Detective", "Ladrón", "Juez", "Presidente", "Alcalde", "Jefe", "Empleado", "Estudiante", "Átomo", "Célula", "ADN", "Cerebro", "Corazón", "Esqueleto", "Músculo", "Sangre", "Virus", "Bacteria", "Energía", "Electricidad", "Magnetismo", "Gravedad", "Láser", "Satélite", "Cohete", "Telescopio", "Microscopio", "Ordenador", "Portátil", "Teclado", "Ratón", "Pantalla", "Chip", "Batería", "Cable", "Enchufe", "Antena", "Dron", "Holograma", "Amistad", "Amor", "Odio", "Miedo", "Alegría", "Tristeza", "Enfado", "Sueño", "Pesadilla", "Suerte", "Destino", "Ilusión", "Secreto", "Mentira", "Verdad", "Silencio", "Ruido", "Sonido", "Luz", "Sombra", "Color", "Rojo", "Azul", "Verde", "Amarillo", "Negro", "Blanco", "Gris", "Rosa", "Morado", "Marrón", "Fuego", "Hielo", "Viento", "Tierra", "Metal", "Plástico", "Cristal", "Papel"];
@@ -116,6 +35,9 @@ async function conectar(hostStatus) {
     isHost = hostStatus;
     room = isHost ? Math.random().toString(36).substring(2, 7).toUpperCase() : document.getElementById('roomCode').value.trim().toUpperCase();
 
+    // Registrar o asegurar que el usuario existe en Supabase al conectar
+    await registrarUsuario(username);
+
     ably = new Ably.Realtime({ key: 'p8bI4A.Qzfliw:Q-6tMsULgdbiI-duhVO96UCU9e1dTtIN7YfKQh7F30U', clientId: username });
     channel = ably.channels.get('room-' + room);
 
@@ -129,7 +51,6 @@ async function conectar(hostStatus) {
 
     if(isHost) document.getElementById('startBtn').classList.remove('hidden');
 
-    // SUSCRIPCIONES CRÍTICAS
     channel.subscribe('start-game', (msg) => startGame(msg.data));
     channel.subscribe('mensaje', (msg) => appendMsg(msg.data));
     channel.subscribe('pasar-turno', () => nextTurn());
@@ -138,6 +59,13 @@ async function conectar(hostStatus) {
     channel.subscribe('voto-mapa', (msg) => registrarVotoMapa(msg.data.mapa));
 
     updateLobby();
+}
+
+async function registrarUsuario(name) {
+    const { data } = await supabase.from('profiles').select('*').eq('username', name).single();
+    if (!data) {
+        await supabase.from('profiles').insert([{ username: name, points: 0 }]);
+    }
 }
 
 function updateLobby() {
@@ -163,28 +91,21 @@ function registrarVotoMapa(mapa) {
     else { root.style.setProperty('--primary', '#a78bfa'); root.style.setProperty('--secondary', '#7c3aed'); }
 }
 
-// --- COMENZAR PARTIDA (ESTA ES LA QUE FALLABA) ---
+// --- PARTIDA ---
 function repartirRoles() {
     if(players.length < 3) return alert("Necesitas 3 jugadores mínimo");
-    
-    // Mezclar orden de turnos
     let ordenTurnos = [...players].sort(() => 0.5 - Math.random());
     const palabra = bibliotecaPalabras[Math.floor(Math.random() * bibliotecaPalabras.length)];
     const numImp = parseInt(document.getElementById('cfg-impostors').value) || 1;
     const impostores = [...ordenTurnos].sort(() => 0.5 - Math.random()).slice(0, numImp);
 
-    channel.publish('start-game', { 
-        impostores: impostores, 
-        palabra: palabra, 
-        players: ordenTurnos 
-    });
+    channel.publish('start-game', { impostores, palabra, players: ordenTurnos });
 }
 
 function startGame(data) {
     eliminated = [];
     roles = data;
     players = data.players;
-    
     document.getElementById('screen-lobby').classList.add('hidden');
     document.getElementById('screen-game').classList.remove('hidden');
     document.getElementById('screen-end').classList.add('hidden');
@@ -200,7 +121,6 @@ function startGame(data) {
     actualizarTurno();
 }
 
-// --- TURNOS Y CHAT ---
 function actualizarTurno() {
     if(eliminated.includes(username)) {
         document.getElementById('turn-indicator').innerText = "ELIMINADO (ESPECTADOR)";
@@ -208,10 +128,8 @@ function actualizarTurno() {
         document.getElementById('sendBtn').disabled = true;
         return;
     }
-
     const actual = players[turnIndex];
     if(eliminated.includes(actual)) { nextTurn(); return; }
-
     const ind = document.getElementById('turn-indicator');
     const input = document.getElementById('messageInput');
     const btn = document.getElementById('sendBtn');
@@ -244,7 +162,6 @@ function nextTurn() {
     }
 }
 
-// --- DECISIONES Y EXPULSIÓN ---
 function votarDecision(tipo) {
     channel.publish('voto-decision', { tipo });
     document.getElementById('decision-panel').classList.add('hidden');
@@ -292,13 +209,43 @@ function handleExpulsion(data) {
     }
 }
 
-function checkWin(ultimo) {
+// --- RANKING Y VICTORIA ---
+async function checkWin(ultimo) {
     const impVivos = roles.impostores.filter(i => !eliminated.includes(i));
     const inoVivos = players.filter(p => !roles.impostores.includes(p) && !eliminated.includes(p));
 
-    if(impVivos.length === 0) showEnd("¡GANAN INOCENTES!", "Impostores eliminados.");
-    else if(inoVivos.length <= impVivos.length) showEnd("¡GANA IMPOSTOR!", "Ya no pueden ganar.");
-    else { turnIndex = 0; actualizarTurno(); }
+    if(impVivos.length === 0) {
+        const ganadoresIno = players.filter(p => !roles.impostores.includes(p));
+        await sumarPuntos(ganadoresIno, 100);
+        showEnd("¡GANAN INOCENTES!", "Impostores eliminados.");
+    } else if(inoVivos.length <= impVivos.length) {
+        await sumarPuntos(roles.impostores, 300);
+        showEnd("¡GANA IMPOSTOR!", "Ya no pueden ganar.");
+    } else {
+        turnIndex = 0;
+        decisiones = { ronda: 0, votar: 0, total: 0 };
+        actualizarTurno();
+    }
+}
+
+async function sumarPuntos(lista, pts) {
+    for (let pName of lista) {
+        const { data } = await supabase.from('profiles').select('points').eq('username', pName).single();
+        if (data) {
+            await supabase.from('profiles').update({ points: data.points + pts }).eq('username', pName);
+        }
+    }
+    await mostrarRanking();
+}
+
+async function mostrarRanking() {
+    const { data: topPlayers } = await supabase.from('profiles').select('username, points').order('points', { ascending: false }).limit(5);
+    let rankingHTML = "<div class='ranking-kahoot'><h3>🏆 TOP 5 GLOBAL</h3>";
+    topPlayers.forEach((p, i) => {
+        rankingHTML += `<div class="rank-item"><span>${i+1}. ${p.username}</span> <b>${p.points} pts</b></div>`;
+    });
+    rankingHTML += "</div>";
+    document.getElementById('end-details').innerHTML = rankingHTML;
 }
 
 function showEnd(titulo, desc) {
@@ -318,5 +265,4 @@ function appendMsg(data) {
     div.innerHTML = `<strong>${data.user}</strong>${data.text}`;
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
-
 }
