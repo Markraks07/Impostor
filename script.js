@@ -11,45 +11,48 @@ let votosMapas = { espacio: 0, cyberpunk: 0, infierno: 0 };
 // CONFIGURACIÓN SUPABASE
 const supabaseUrl = 'https://nrxrtpoaldkwyoeurmuv.supabase.co';
 const supabaseKey = 'sb_publishable_7SBqbTCTRKt28o2ruUqG5A_sV4pfPI6';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // --- LISTA DE PALABRAS ---
 const bibliotecaPalabras = ["Pizza", "TikTok", "Escuela", "Netflix", "Minecraft", "Fútbol", "YouTube", "Hamburguesa", "Examen", "Gimnasio", "Playa", "WhatsApp", "Profesor", "Mochila", "Dormir", "Cine", "Helado", "Perro", "Gato", "Televisión", "Videojuegos", "Bicicleta", "Navidad", "Verano", "Astronauta", "Pirata", "Zombie", "Dragón", "Castillo", "Espada", "Escudo", "Robot", "Teléfono", "Internet", "Instagram", "Música", "Guitarra", "Piano", "Cantante", "Estadio", "Avión", "Barco", "Tren", "Coche", "Moto", "Semáforo", "Policía", "Bombero", "Doctor", "Hospital", "Medicina", "Libro", "Biblioteca", "Lápiz", "Cuaderno", "Tarea", "Pizarra", "Parque", "Tobogán", "Piscina", "Montaña", "Nieve", "Esquí", "Camping", "Bosque", "Chocolate", "Caramelo", "Galleta", "Fruta", "Manzana", "Plátano", "Sushi", "Taco", "Batman", "Spiderman", "Ironman", "Superman", "Avengers", "Anime", "Naruto", "Pokémon", "Fortnite", "Roblox", "Among Us", "Discord", "Twitch", "Selfie", "Influencer", "Meme", "Dinero", "Diamante", "Oro", "Tesoro", "Mapa", "Brújula", "Reloj", "Tiempo", "Espacio", "León", "Tigre", "Elefante", "Jirafa", "Tiburón", "Delfín", "Ballena", "Águila", "Loro", "Serpiente", "Araña", "Abeja", "Mariposa", "Caballo", "Vaca", "Cerdo", "Oveja", "Gallina", "Conejo", "Ardilla", "Oso", "Lobo", "Pingüino", "Canguro", "Volcán", "Terremoto", "Tormenta", "Río", "Lago", "Océano", "Isla", "Desierto", "Jungla", "Cueva", "Estrella", "Luna", "Sol", "Planeta", "Cometa", "Nube", "Lluvia", "Rayo", "Arcoíris", "Flor", "Árbol", "Palmera", "Cactus", "Cama", "Sofá", "Silla", "Mesa", "Lámpara", "Espejo", "Cuadro", "Ventana", "Puerta", "Llave", "Nevera", "Horno", "Microondas", "Lavadora", "Ducha", "Toalla", "Jabón", "Cepillo", "Peine", "Ropa", "Zapatos", "Gorra", "Gafas", "Anillo", "Bolso", "Cartera", "Moneda", "Billete", "Cuchillo", "Tenedor", "Cuchara", "Plato", "Vaso", "Sartén", "Olla", "Martillo", "Destornillador", "Tijeras", "Pegamento", "Cinta", "Caja", "Maleta", "Paraguas", "Escoba", "Supermercado", "Restaurante", "Hotel", "Museo", "Zoo", "Acuario", "Aeropuerto", "Puerto", "Estación", "Puente", "Rascacielos", "Iglesia", "Ayuntamiento", "Cárcel", "Banco", "Cajero", "Farmacia", "Panadería", "Kiosco", "Peluquería", "Taller", "Garaje", "Gasolinera", "Parking", "Calle", "Avenida", "Plaza", "Fuente", "Estatua", "Monumento", "Faro", "Pirámide", "Teatro", "Discoteca", "Casino", "Circo", "Feria", "Pasta", "Arroz", "Sopa", "Ensalada", "Carne", "Pescado", "Huevo", "Queso", "Leche", "Yogur", "Mantequilla", "Pan", "Cereales", "Patatas", "Tomate", "Cebolla", "Zanahoria", "Lechuga", "Naranja", "Fresa", "Uva", "Sandía", "Limón", "Pastel", "Donut", "Muffin", "Zumo", "Refresco", "Café", "Té", "Agua", "Cerveza", "Vino", "Cocktail", "Kebab", "Paella", "Tortilla", "Croqueta", "Perrito", "Palomitas", "Baloncesto", "Tenis", "Golf", "Voleibol", "Rugby", "Béisbol", "Boxeo", "Kárate", "Surf", "Skate", "Patinaje", "Ajedrez", "Cartas", "Dados", "Baile", "Fiesta", "Boda", "Cumpleaños", "Concierto", "Festival", "Ópera", "Ballet", "Magia", "Malabares", "Pintura", "Escultura", "Fotografía", "Cámara", "Micrófono", "Auriculares", "Altavoz", "Radio", "Podcast", "Batería", "Violín", "Flauta", "Trompeta", "Abogado", "Arquitecto", "Ingeniero", "Científico", "Astrónomo", "Escritor", "Poeta", "Periodista", "Reportero", "Actor", "Director", "Modelo", "Cocinero", "Camarero", "Panadero", "Granjero", "Pescador", "Soldado", "General", "Rey", "Reina", "Príncipe", "Princesa", "Caballero", "Vikingo", "Samurái", "Ninja", "Espía", "Detective", "Ladrón", "Juez", "Presidente", "Alcalde", "Jefe", "Empleado", "Estudiante", "Átomo", "Célula", "ADN", "Cerebro", "Corazón", "Esqueleto", "Músculo", "Sangre", "Virus", "Bacteria", "Energía", "Electricidad", "Magnetismo", "Gravedad", "Láser", "Satélite", "Cohete", "Telescopio", "Microscopio", "Ordenador", "Portátil", "Teclado", "Ratón", "Pantalla", "Chip", "Batería", "Cable", "Enchufe", "Antena", "Dron", "Holograma", "Amistad", "Amor", "Odio", "Miedo", "Alegría", "Tristeza", "Enfado", "Sueño", "Pesadilla", "Suerte", "Destino", "Ilusión", "Secreto", "Mentira", "Verdad", "Silencio", "Ruido", "Sonido", "Luz", "Sombra", "Color", "Rojo", "Azul", "Verde", "Amarillo", "Negro", "Blanco", "Gris", "Rosa", "Morado", "Marrón", "Fuego", "Hielo", "Viento", "Tierra", "Metal", "Plástico", "Cristal", "Papel"];
 
-// --- NAVEGACIÓN ---
+// --- NAVEGACIÓN (LOS BOTONES QUE NO IBAN) ---
 function showSetup() {
-    const nick = document.getElementById('username').value.trim();
-    if(!nick) return alert("Ponte un Nick");
+    const inputNick = document.getElementById('username').value.trim();
+    if (inputNick.length < 2) return alert("Introduce un Nick válido");
+    username = inputNick;
     document.getElementById('screen-start').classList.add('hidden');
     document.getElementById('screen-setup').classList.remove('hidden');
 }
 
 function showJoin() {
-    const nick = document.getElementById('username').value.trim();
-    if(!nick) return alert("Ponte un Nick");
+    const inputNick = document.getElementById('username').value.trim();
+    if (inputNick.length < 2) return alert("Introduce un Nick válido");
+    username = inputNick;
     document.getElementById('screen-start').classList.add('hidden');
     document.getElementById('screen-join').classList.remove('hidden');
 }
 
 // --- CONEXIÓN ---
 async function conectar(hostStatus) {
-    username = document.getElementById('username').value.trim();
     isHost = hostStatus;
     
     if(isHost) {
-        room = Math.random().toString(36).substring(2, 7).toUpperCase();
+        room = Math.random().toString(36).substring(2, 6).toUpperCase();
     } else {
         room = document.getElementById('roomCode').value.trim().toUpperCase();
-        if(!room) return alert("Introduce un código");
+        if(!room) return alert("Introduce el código de sala");
     }
 
-    // Registro en Supabase
+    // Registro automático en Supabase
     await registrarEnSupabase(username);
 
     ably = new Ably.Realtime({ key: 'p8bI4A.Qzfliw:Q-6tMsULgdbiI-duhVO96UCU9e1dTtIN7YfKQh7F30U', clientId: username });
     channel = ably.channels.get('room-' + room);
 
-    document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+    // Ocultar todas las pantallas de inicio
+    document.getElementById('screen-setup').classList.add('hidden');
+    document.getElementById('screen-join').classList.add('hidden');
     document.getElementById('screen-lobby').classList.remove('hidden');
     document.getElementById('display-room').innerText = room;
 
@@ -79,11 +82,12 @@ async function registrarEnSupabase(name) {
         if (!data) {
             await supabase.from('profiles').insert([{ username: name, points: 0 }]);
         }
-    } catch(e) { console.log("Supabase error:", e); }
+    } catch(e) { console.error("Error DB:", e); }
 }
 
 function updateLobby() {
     channel.presence.get((err, members) => {
+        if(err) return;
         players = members.map(m => m.clientId);
         document.getElementById('player-list').innerHTML = players.map(p => `<div class="player-tag">${p}</div>`).join('');
     });
@@ -98,7 +102,7 @@ function registrarVotoMapa(mapa) {
 }
 
 function repartirRoles() {
-    if(players.length < 3) return alert("Mínimo 3 jugadores");
+    if(players.length < 3) return alert("Mínimo 3 jugadores para empezar");
     let orden = [...players].sort(() => 0.5 - Math.random());
     const palabra = bibliotecaPalabras[Math.floor(Math.random() * bibliotecaPalabras.length)];
     const numImp = parseInt(document.getElementById('cfg-impostors').value) || 1;
@@ -117,8 +121,8 @@ function startGame(data) {
     
     const esImp = data.impostores.includes(username);
     document.getElementById('role-message').innerHTML = esImp ? 
-        `<b style="color:#ef4444">ERES EL IMPOSTOR</b>` : 
-        `<b style="color:#10b981">ERES INOCENTE</b><br>La palabra es: <b>${data.palabra}</b>`;
+        `<b style="color:#ef4444; font-size: 1.5rem;">🕵️ ERES EL IMPOSTOR</b>` : 
+        `<b style="color:#10b981">😇 ERES INOCENTE</b><br>Palabra secreta: <b style="color:var(--primary)">${data.palabra}</b>`;
     
     turnIndex = 0;
     actualizarTurno();
@@ -126,17 +130,19 @@ function startGame(data) {
 
 function actualizarTurno() {
     if(eliminated.includes(username)) {
-        document.getElementById('turn-indicator').innerText = "ESPECTADOR (ELIMINADO)";
+        document.getElementById('turn-indicator').innerText = "💀 ESTÁS ELIMINADO (ESPECTADOR)";
+        document.getElementById('messageInput').disabled = true;
+        document.getElementById('sendBtn').disabled = true;
         return;
     }
     const actual = players[turnIndex];
     if(eliminated.includes(actual)) { nextTurn(); return; }
     
     const esMiTurno = actual === username;
-    document.getElementById('turn-indicator').innerText = esMiTurno ? "⭐ TU TURNO" : `Turno de: ${actual}`;
+    document.getElementById('turn-indicator').innerText = esMiTurno ? "⭐ TU TURNO" : `Esperando a ${actual}...`;
     document.getElementById('messageInput').disabled = !esMiTurno;
     document.getElementById('sendBtn').disabled = !esMiTurno;
-    if(esMiTurno) document.getElementById('messageInput').placeholder = "Escribe tu pista...";
+    if(esMiTurno) document.getElementById('messageInput').focus();
 }
 
 function enviarMensaje() {
@@ -152,7 +158,7 @@ function nextTurn() {
     turnIndex++;
     if(turnIndex >= players.length) {
         if(!eliminated.includes(username)) document.getElementById('decision-panel').classList.remove('hidden');
-        document.getElementById('turn-indicator').innerText = "FIN DE RONDA";
+        document.getElementById('turn-indicator').innerText = "RONDA FINALIZADA";
     } else {
         actualizarTurno();
     }
@@ -166,8 +172,8 @@ function votarDecision(tipo) {
 function handleDecision(data) {
     decisiones[data.tipo]++;
     decisiones.total++;
-    const vivos = players.length - eliminated.length;
-    if(decisiones.total >= vivos) {
+    const vivosCount = players.length - eliminated.length;
+    if(decisiones.total >= vivosCount) {
         if(decisiones.votar >= decisiones.ronda) {
             if(!eliminated.includes(username)) abrirVotacion();
         } else {
@@ -198,7 +204,7 @@ function handleExpulsion(data) {
     if(totalVotos >= vivosCount) {
         const expulsado = Object.keys(votosExp).reduce((a,b)=>votosExp[a]>votosExp[b]?a:b);
         eliminated.push(expulsado);
-        appendMsg({ user: "SISTEMA", text: `¡${expulsado} ha sido expulsado!` });
+        appendMsg({ user: "SISTEMA", text: `📢 ¡${expulsado} ha sido expulsado de la sala!` });
         votosExp = {};
         checkWin();
     }
@@ -210,10 +216,10 @@ async function checkWin() {
 
     if(impVivos.length === 0) {
         await sumarPuntos(players.filter(p => !roles.impostores.includes(p)), 100);
-        showEnd("🏆 ¡GANAN INOCENTES!", "El impostor fue descubierto.");
+        showEnd("🏆 ¡VICTORIA INOCENTE!", "Habéis encontrado al impostor.");
     } else if(inoVivos.length <= impVivos.length) {
         await sumarPuntos(roles.impostores, 300);
-        showEnd("💀 ¡GANA EL IMPOSTOR!", "Logró engañar a todos.");
+        showEnd("💀 ¡VICTORIA IMPOSTOR!", "El impostor ha engañado a todos.");
     } else {
         turnIndex = 0; decisiones = { ronda: 0, votar: 0, total: 0 };
         actualizarTurno();
@@ -222,8 +228,10 @@ async function checkWin() {
 
 async function sumarPuntos(lista, pts) {
     for (let pName of lista) {
-        const { data } = await supabase.from('profiles').select('points').eq('username', pName).single();
-        if (data) await supabase.from('profiles').update({ points: data.points + pts }).eq('username', pName);
+        try {
+            const { data } = await supabase.from('profiles').select('points').eq('username', pName).single();
+            if (data) await supabase.from('profiles').update({ points: data.points + pts }).eq('username', pName);
+        } catch(e) { console.log(e); }
     }
 }
 
@@ -233,7 +241,7 @@ async function showEnd(titulo, desc) {
     document.getElementById('end-title').innerText = titulo;
     
     const { data: top } = await supabase.from('profiles').select('username, points').order('points', { ascending: false }).limit(5);
-    let rankingHTML = `<h3>🏆 TOP 5 GLOBAL</h3><div class="ranking-kahoot">`;
+    let rankingHTML = `<div class="ranking-kahoot"><h3>🏆 TOP 5 GLOBAL</h3>`;
     top.forEach((p, i) => {
         rankingHTML += `<div class="rank-item"><span>${i+1}. ${p.username}</span> <b>${p.points} pts</b></div>`;
     });
@@ -248,6 +256,8 @@ function irAlLobby() {
     document.getElementById('screen-end').classList.add('hidden');
     document.getElementById('screen-lobby').classList.remove('hidden');
     if(isHost) document.getElementById('startBtn').classList.remove('hidden');
+    decisiones = { ronda: 0, votar: 0, total: 0 };
+    votosMapas = { espacio: 0, cyberpunk: 0, infierno: 0 };
 }
 
 function appendMsg(data) {
