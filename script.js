@@ -16,52 +16,73 @@ const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 // --- LISTA DE PALABRAS ---
 const bibliotecaPalabras = ["Pizza", "TikTok", "Escuela", "Netflix", "Minecraft", "Fútbol", "YouTube", "Hamburguesa", "Examen", "Gimnasio", "Playa", "WhatsApp", "Profesor", "Mochila", "Dormir", "Cine", "Helado", "Perro", "Gato", "Televisión", "Videojuegos", "Bicicleta", "Navidad", "Verano", "Astronauta", "Pirata", "Zombie", "Dragón", "Castillo", "Espada", "Escudo", "Robot", "Teléfono", "Internet", "Instagram", "Música", "Guitarra", "Piano", "Cantante", "Estadio", "Avión", "Barco", "Tren", "Coche", "Moto", "Semáforo", "Policía", "Bombero", "Doctor", "Hospital", "Medicina", "Libro", "Biblioteca", "Lápiz", "Cuaderno", "Tarea", "Pizarra", "Parque", "Tobogán", "Piscina", "Montaña", "Nieve", "Esquí", "Camping", "Bosque", "Chocolate", "Caramelo", "Galleta", "Fruta", "Manzana", "Plátano", "Sushi", "Taco", "Batman", "Spiderman", "Ironman", "Superman", "Avengers", "Anime", "Naruto", "Pokémon", "Fortnite", "Roblox", "Among Us", "Discord", "Twitch", "Selfie", "Influencer", "Meme", "Dinero", "Diamante", "Oro", "Tesoro", "Mapa", "Brújula", "Reloj", "Tiempo", "Espacio", "León", "Tigre", "Elefante", "Jirafa", "Tiburón", "Delfín", "Ballena", "Águila", "Loro", "Serpiente", "Araña", "Abeja", "Mariposa", "Caballo", "Vaca", "Cerdo", "Oveja", "Gallina", "Conejo", "Ardilla", "Oso", "Lobo", "Pingüino", "Canguro", "Volcán", "Terremoto", "Tormenta", "Río", "Lago", "Océano", "Isla", "Desierto", "Jungla", "Cueva", "Estrella", "Luna", "Sol", "Planeta", "Cometa", "Nube", "Lluvia", "Rayo", "Arcoíris", "Flor", "Árbol", "Palmera", "Cactus", "Cama", "Sofá", "Silla", "Mesa", "Lámpara", "Espejo", "Cuadro", "Ventana", "Puerta", "Llave", "Nevera", "Horno", "Microondas", "Lavadora", "Ducha", "Toalla", "Jabón", "Cepillo", "Peine", "Ropa", "Zapatos", "Gorra", "Gafas", "Anillo", "Bolso", "Cartera", "Moneda", "Billete", "Cuchillo", "Tenedor", "Cuchara", "Plato", "Vaso", "Sartén", "Olla", "Martillo", "Destornillador", "Tijeras", "Pegamento", "Cinta", "Caja", "Maleta", "Paraguas", "Escoba", "Supermercado", "Restaurante", "Hotel", "Museo", "Zoo", "Acuario", "Aeropuerto", "Puerto", "Estación", "Puente", "Rascacielos", "Iglesia", "Ayuntamiento", "Cárcel", "Banco", "Cajero", "Farmacia", "Panadería", "Kiosco", "Peluquería", "Taller", "Garaje", "Gasolinera", "Parking", "Calle", "Avenida", "Plaza", "Fuente", "Estatua", "Monumento", "Faro", "Pirámide", "Teatro", "Discoteca", "Casino", "Circo", "Feria", "Pasta", "Arroz", "Sopa", "Ensalada", "Carne", "Pescado", "Huevo", "Queso", "Leche", "Yogur", "Mantequilla", "Pan", "Cereales", "Patatas", "Tomate", "Cebolla", "Zanahoria", "Lechuga", "Naranja", "Fresa", "Uva", "Sandía", "Limón", "Pastel", "Donut", "Muffin", "Zumo", "Refresco", "Café", "Té", "Agua", "Cerveza", "Vino", "Cocktail", "Kebab", "Paella", "Tortilla", "Croqueta", "Perrito", "Palomitas", "Baloncesto", "Tenis", "Golf", "Voleibol", "Rugby", "Béisbol", "Boxeo", "Kárate", "Surf", "Skate", "Patinaje", "Ajedrez", "Cartas", "Dados", "Baile", "Fiesta", "Boda", "Cumpleaños", "Concierto", "Festival", "Ópera", "Ballet", "Magia", "Malabares", "Pintura", "Escultura", "Fotografía", "Cámara", "Micrófono", "Auriculares", "Altavoz", "Radio", "Podcast", "Batería", "Violín", "Flauta", "Trompeta", "Abogado", "Arquitecto", "Ingeniero", "Científico", "Astrónomo", "Escritor", "Poeta", "Periodista", "Reportero", "Actor", "Director", "Modelo", "Cocinero", "Camarero", "Panadero", "Granjero", "Pescador", "Soldado", "General", "Rey", "Reina", "Príncipe", "Princesa", "Caballero", "Vikingo", "Samurái", "Ninja", "Espía", "Detective", "Ladrón", "Juez", "Presidente", "Alcalde", "Jefe", "Empleado", "Estudiante", "Átomo", "Célula", "ADN", "Cerebro", "Corazón", "Esqueleto", "Músculo", "Sangre", "Virus", "Bacteria", "Energía", "Electricidad", "Magnetismo", "Gravedad", "Láser", "Satélite", "Cohete", "Telescopio", "Microscopio", "Ordenador", "Portátil", "Teclado", "Ratón", "Pantalla", "Chip", "Batería", "Cable", "Enchufe", "Antena", "Dron", "Holograma", "Amistad", "Amor", "Odio", "Miedo", "Alegría", "Tristeza", "Enfado", "Sueño", "Pesadilla", "Suerte", "Destino", "Ilusión", "Secreto", "Mentira", "Verdad", "Silencio", "Ruido", "Sonido", "Luz", "Sombra", "Color", "Rojo", "Azul", "Verde", "Amarillo", "Negro", "Blanco", "Gris", "Rosa", "Morado", "Marrón", "Fuego", "Hielo", "Viento", "Tierra", "Metal", "Plástico", "Cristal", "Papel"];
 
-// --- NAVEGACIÓN ---
+// --- NAVEGACIÓN CORREGIDA ---
 function showSetup() {
-    if(!document.getElementById('username').value.trim()) return alert("Ponte un nombre");
+    const user = document.getElementById('username').value.trim();
+    if(!user) return alert("Ponte un nombre");
+    
     document.getElementById('screen-start').classList.add('hidden');
     document.getElementById('screen-setup').classList.remove('hidden');
 }
 
 function showJoin() {
-    if(!document.getElementById('username').value.trim()) return alert("Ponte un nombre");
+    const user = document.getElementById('username').value.trim();
+    if(!user) return alert("Ponte un nombre");
+    
     document.getElementById('screen-start').classList.add('hidden');
     document.getElementById('screen-join').classList.remove('hidden');
 }
 
-// --- CONEXIÓN ---
+// --- CONEXIÓN CORREGIDA ---
 async function conectar(hostStatus) {
     username = document.getElementById('username').value.trim();
     isHost = hostStatus;
-    room = isHost ? Math.random().toString(36).substring(2, 7).toUpperCase() : document.getElementById('roomCode').value.trim().toUpperCase();
+    
+    if (isHost) {
+        room = Math.random().toString(36).substring(2, 7).toUpperCase();
+    } else {
+        room = document.getElementById('roomCode').value.trim().toUpperCase();
+        if (!room) return alert("Introduce un código de sala");
+    }
 
-    // REGISTRO AUTOMÁTICO EN SUPABASE
-    await registrarEnSupabase(username);
+    try {
+        // REGISTRO AUTOMÁTICO EN SUPABASE
+        await registrarEnSupabase(username);
 
-    ably = new Ably.Realtime({ key: 'p8bI4A.Qzfliw:Q-6tMsULgdbiI-duhVO96UCU9e1dTtIN7YfKQh7F30U', clientId: username });
-    channel = ably.channels.get('room-' + room);
+        // INICIALIZAR ABLY
+        ably = new Ably.Realtime({ 
+            key: 'p8bI4A.Qzfliw:Q-6tMsULgdbiI-duhVO96UCU9e1dTtIN7YfKQh7F30U', 
+            clientId: username 
+        });
+        channel = ably.channels.get('room-' + room);
 
-    document.querySelectorAll('.card, #screen-game').forEach(c => c.classList.add('hidden'));
-    document.getElementById('screen-lobby').classList.remove('hidden');
-    document.getElementById('display-room').innerText = room;
+        // CAMBIO DE PANTALLA
+        document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+        document.getElementById('screen-lobby').classList.remove('hidden');
+        document.getElementById('display-room').innerText = room;
 
-    channel.presence.subscribe('enter', updateLobby);
-    channel.presence.subscribe('leave', updateLobby);
-    channel.presence.enter();
+        // SUSCRIPCIONES
+        channel.presence.subscribe('enter', updateLobby);
+        channel.presence.subscribe('leave', updateLobby);
+        channel.presence.enter();
 
-    if(isHost) document.getElementById('startBtn').classList.remove('hidden');
+        channel.subscribe('start-game', (msg) => startGame(msg.data));
+        channel.subscribe('mensaje', (msg) => appendMsg(msg.data));
+        channel.subscribe('pasar-turno', () => nextTurn());
+        channel.subscribe('voto-decision', (msg) => handleDecision(msg.data));
+        channel.subscribe('vote-cast', (msg) => handleExpulsion(msg.data));
+        channel.subscribe('voto-mapa', (msg) => registrarVotoMapa(msg.data.mapa));
+        channel.subscribe('volver-lobby-global', () => irAlLobby());
 
-    channel.subscribe('start-game', (msg) => startGame(msg.data));
-    channel.subscribe('mensaje', (msg) => appendMsg(msg.data));
-    channel.subscribe('pasar-turno', () => nextTurn());
-    channel.subscribe('voto-decision', (msg) => handleDecision(msg.data));
-    channel.subscribe('vote-cast', (msg) => handleExpulsion(msg.data));
-    channel.subscribe('voto-mapa', (msg) => registrarVotoMapa(msg.data.mapa));
-    channel.subscribe('volver-lobby-global', () => irAlLobby());
+        if(isHost) document.getElementById('startBtn').classList.remove('hidden');
+        
+        updateLobby();
 
-    updateLobby();
+    } catch (error) {
+        console.error(error);
+        alert("Error al conectar: " + error.message);
+    }
 }
-
 async function registrarEnSupabase(name) {
     const { data } = await supabase.from('profiles').select('*').eq('username', name).single();
     if (!data) {
@@ -234,3 +255,4 @@ function appendMsg(data) {
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
 }
+
