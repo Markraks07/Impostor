@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Impostor Online 🕵️</title>
     <link rel="stylesheet" href="style.css">
+    
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -22,55 +24,59 @@
         </div>
 
         <div id="screen-setup" class="card hidden">
-            <h3>Configuración</h3>
-            <label>Nº Impostores:</label>
-            <input type="number" id="cfg-impostors" value="1" min="1" max="3">
+            <h3>Configuración de Sala</h3>
+            <div style="margin: 15px 0;">
+                <label>Nº Impostores:</label>
+                <input type="number" id="cfg-impostors" value="1" min="1" max="3" style="width: 50px;">
+            </div>
             <button class="confirm" onclick="conectar(true)">Crear y Entrar</button>
+            <button onclick="location.reload()" style="background: none; color: gray; font-size: 0.8rem;">Volver</button>
         </div>
 
         <div id="screen-join" class="card hidden">
-            <input type="text" id="roomCode" placeholder="Código de la Sala">
-            <button class="confirm" onclick="conectar(false)">Entrar</button>
+            <h3>Introduce el código</h3>
+            <input type="text" id="roomCode" placeholder="Código de la Sala (Ej: AB12)">
+            <button class="confirm" onclick="conectar(false)">Entrar a la Sala</button>
+            <button onclick="location.reload()" style="background: none; color: gray; font-size: 0.8rem;">Volver</button>
         </div>
 
         <div id="screen-lobby" class="card hidden">
-            <h3>Sala: <span id="display-room">---</span></h3>
+            <div class="room-badge">SALA: <span id="display-room">---</span></div>
 
             <div id="map-selector" style="margin-top: 15px;">
                 <p style="font-size: 0.8rem; margin-bottom: 5px; color: var(--primary);">🗳️ Vota el ambiente:</p>
-                <div class="buttons" style="flex-direction: row; gap: 5px;">
+                <div class="buttons" style="flex-direction: row; gap: 5px; flex-wrap: wrap; justify-content: center;">
                     <button onclick="votarMapa('espacio')" style="font-size: 0.7rem; padding: 8px;">🌌 Espacio</button>
-                    <button onclick="votarMapa('cyberpunk')" style="font-size: 0.7rem; padding: 8px;">🏙️
-                        Cyberpunk</button>
-                    <button onclick="votarMapa('infierno')" style="font-size: 0.7rem; padding: 8px;">🔥
-                        Infierno</button>
+                    <button onclick="votarMapa('cyberpunk')" style="font-size: 0.7rem; padding: 8px;">🏙️ Cyberpunk</button>
+                    <button onclick="votarMapa('infierno')" style="font-size: 0.7rem; padding: 8px;">🔥 Infierno</button>
                 </div>
             </div>
 
-            <div id="player-list"></div>
+            <div id="player-list" style="margin: 20px 0;"></div>
+            
             <div class="actions">
                 <button id="startBtn" class="hidden confirm" onclick="repartirRoles()">Comenzar Partida</button>
-                <p id="wait-msg">Esperando al anfitrión...</p>
+                <p id="wait-msg">Esperando a que el anfitrión inicie...</p>
             </div>
         </div>
 
         <div id="screen-game" class="hidden">
-            <div id="turn-indicator">Preparando...</div>
+            <div id="turn-indicator">Preparando la ronda...</div>
 
             <div class="role-card">
-                <div id="role-message">Asignando roles...</div>
+                <div id="role-message">Asignando roles secretos...</div>
             </div>
 
             <div class="chat-container">
                 <div id="chat-messages"></div>
                 <div class="chat-input">
-                    <input type="text" id="messageInput" placeholder="Espera..." disabled>
+                    <input type="text" id="messageInput" placeholder="Espera tu turno..." disabled onkeydown="if(event.key==='Enter') enviarMensaje()">
                     <button id="sendBtn" onclick="enviarMensaje()" disabled>Enviar</button>
                 </div>
             </div>
 
             <div id="decision-panel" class="card hidden">
-                <h3>Ronda terminada</h3>
+                <h3>¿Qué queréis hacer?</h3>
                 <div class="buttons">
                     <button onclick="votarDecision('ronda')">Otra ronda de pistas</button>
                     <button class="vote" onclick="votarDecision('votar')">Ir a Votación</button>
@@ -79,19 +85,22 @@
         </div>
 
         <div id="screen-end" class="card hidden">
-            <h1 id="end-title"></h1>
+            <h1 id="end-title" class="glitch"></h1>
             <div id="end-details"></div>
-            <div class="actions">
-                <button id="btn-replay" class="confirm hidden" onclick="publicarRegreso()">Volver al Lobby</button>
+            <div class="actions" style="margin-top: 20px;">
+                <button id="btn-replay" class="confirm hidden" onclick="publicarRegreso()">Nueva Ronda</button>
+                <button onclick="location.reload()" style="background: #444;">Salir</button>
             </div>
         </div>
-        <div id="vote-modal" class="card hidden">
-            <h3>¿Quién es el impostor?</h3>
+
+        <div id="vote-modal" class="card hidden overlay">
+            <h3>¿Quién crees que es el Impostor?</h3>
+            <p style="font-size: 0.8rem; color: #aaa;">El más votado será expulsado</p>
             <div id="vote-options" class="buttons"></div>
         </div>
+
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script src="script.js"></script>
 </body>
 </html>
