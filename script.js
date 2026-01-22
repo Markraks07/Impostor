@@ -232,4 +232,87 @@ function appendMsg(data) {
     div.innerHTML = `<strong>${data.user}</strong>${data.text}`;
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
+
+}
+
+// CONFIGURACIÓN SUPABASE
+const supabaseUrl = 'TU_URL_DE_SUPABASE';
+const supabaseKey = 'TU_ANON_KEY_DE_SUPABASE';
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+let sessionUser = null;
+
+// --- LOGIN / REGISTRO ---
+async function handleAuth(type) {
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-pass').value;
+
+    const { data, error } = (type === 'login') 
+        ? await supabase.auth.signInWithPassword({ email, password })
+        : await supabase.auth.signUp({ email, password });
+
+    if (error) return alert(error.message);
+    
+    sessionUser = data.user;
+    // Si es registro, crear perfil en la tabla 'profiles'
+    if(type === 'signup') {
+        const userNick = prompt("Elige tu Nick público:");
+        await supabase.from('profiles').insert([{ id: sessionUser.id, username: userNick }]);
+    }
+
+    initApp();
+}
+
+async function initApp() {
+    document.getElementById('screen-auth').classList.add('hidden');
+    document.getElementById('screen-start').classList.remove('hidden');
+    document.getElementById('global-section').classList.remove('hidden');
+    
+    // Cargar mensajes antiguos del chat global
+    const { data: msgs } = await supabase.from('global_messages').select('*').order('created_at', { ascending: true }).limit(20);
+    msgs.forEach(m => renderGlobalMsg(m));
+
+    // Suscribirse al chat global en tiempo real
+    supabase.channel('global_chat')
+    .on('postgres_changes', { event: 'INSERT', table: 'global_messages' }, payload => {
+        renderGlobalMsg(payload.new);
+    }).subscribe();
+}
+
+// --- SISTEMA DE RANKING ESTILO KAHOOT ---
+async function finalizarPartida(ganadores) {
+    // ganadores = ['user1', 'user2']
+    for (let pName of ganadores) {
+        // Obtener puntos actuales
+        const { data } = await supabase.from('profiles').select('points').eq('username', pName).single();
+        // Sumar 100 puntos
+        await supabase.from('profiles').update({ points: (data.points || 0) + 100 }).eq('username', pName);
+    }
+    mostrarRanking();
+}
+
+async function mostrarRanking() {
+    const { data: topPlayers } = await supabase.from('profiles').select('username, points').order('points', { ascending: false }).limit(5);
+    
+    let rankingHTML = "<h3>🏆 TOP RANKING</h3>";
+    topPlayers.forEach((p, index) => {
+        rankingHTML += `<div class="player-tag">${index + 1}. ${p.username} - ${p.points}pts</div>`;
+    });
+    
+    document.getElementById('end-details').innerHTML = rankingHTML;
+}
+
+// --- CHAT GLOBAL MENSAJES ---
+async function sendGlobalMsg() {
+    const text = document.getElementById('global-input').value;
+    const { data: profile } = await supabase.from('profiles').select('username').eq('id', sessionUser.id).single();
+    
+    await supabase.from('global_messages').insert([{ user_id: sessionUser.id, username: profile.username, text }]);
+    document.getElementById('global-input').value = '';
+}
+
+function renderGlobalMsg(msg) {
+    const box = document.getElementById('global-chat-box');
+    box.innerHTML += `<div><strong>${msg.username}:</strong> ${msg.text}</div>`;
+    box.scrollTop = box.scrollHeight;
 }
