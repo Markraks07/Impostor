@@ -79,15 +79,12 @@
         </div>
 
         <div id="screen-end" class="card hidden">
-            <h2 id="end-title">FIN DEL JUEGO</h2>
-            <p id="end-details"></p>
-            <div class="buttons" style="margin-top:20px">
-                <button id="btn-replay" class="confirm hidden" onclick="volverAlLobby()">Volver a Jugar</button>
-                
-                <button class="leave" onclick="location.reload()">Salir al Inicio</button>
+            <h1 id="end-title"></h1>
+            <div id="end-details"></div>
+            <div class="actions">
+                <button id="btn-replay" class="confirm hidden" onclick="publicarRegreso()">Volver al Lobby</button>
             </div>
         </div>
-
         <div id="vote-modal" class="card hidden">
             <h3>¿Quién es el impostor?</h3>
             <div id="vote-options" class="buttons"></div>
@@ -98,6 +95,7 @@
 
 
 </html>
+
 
 
 
