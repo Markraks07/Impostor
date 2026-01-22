@@ -35,8 +35,8 @@ async function conectar(hostStatus) {
     isHost = hostStatus;
     room = isHost ? Math.random().toString(36).substring(2, 7).toUpperCase() : document.getElementById('roomCode').value.trim().toUpperCase();
 
-    // Registrar o asegurar que el usuario existe en Supabase al conectar
-    await registrarUsuario(username);
+    // REGISTRO AUTOMÁTICO EN SUPABASE
+    await registrarEnSupabase(username);
 
     ably = new Ably.Realtime({ key: 'p8bI4A.Qzfliw:Q-6tMsULgdbiI-duhVO96UCU9e1dTtIN7YfKQh7F30U', clientId: username });
     channel = ably.channels.get('room-' + room);
@@ -57,11 +57,12 @@ async function conectar(hostStatus) {
     channel.subscribe('voto-decision', (msg) => handleDecision(msg.data));
     channel.subscribe('vote-cast', (msg) => handleExpulsion(msg.data));
     channel.subscribe('voto-mapa', (msg) => registrarVotoMapa(msg.data.mapa));
+    channel.subscribe('volver-lobby-global', () => irAlLobby());
 
     updateLobby();
 }
 
-async function registrarUsuario(name) {
+async function registrarEnSupabase(name) {
     const { data } = await supabase.from('profiles').select('*').eq('username', name).single();
     if (!data) {
         await supabase.from('profiles').insert([{ username: name, points: 0 }]);
@@ -77,29 +78,21 @@ function updateLobby() {
 }
 
 // --- LÓGICA DE MAPAS ---
-function votarMapa(mapa) {
-    channel.publish('voto-mapa', { mapa });
-}
-
+function votarMapa(mapa) { channel.publish('voto-mapa', { mapa }); }
 function registrarVotoMapa(mapa) {
     votosMapas[mapa]++;
     const ganador = Object.keys(votosMapas).reduce((a, b) => votosMapas[a] > votosMapas[b] ? a : b);
     document.body.className = 'map-' + ganador;
-    const root = document.documentElement;
-    if(ganador === 'cyberpunk') { root.style.setProperty('--primary', '#ff007f'); root.style.setProperty('--secondary', '#7000ff'); }
-    else if(ganador === 'infierno') { root.style.setProperty('--primary', '#ff4400'); root.style.setProperty('--secondary', '#990000'); }
-    else { root.style.setProperty('--primary', '#a78bfa'); root.style.setProperty('--secondary', '#7c3aed'); }
 }
 
 // --- PARTIDA ---
 function repartirRoles() {
-    if(players.length < 3) return alert("Necesitas 3 jugadores mínimo");
-    let ordenTurnos = [...players].sort(() => 0.5 - Math.random());
+    if(players.length < 3) return alert("Mínimo 3 jugadores");
+    let orden = [...players].sort(() => 0.5 - Math.random());
     const palabra = bibliotecaPalabras[Math.floor(Math.random() * bibliotecaPalabras.length)];
     const numImp = parseInt(document.getElementById('cfg-impostors').value) || 1;
-    const impostores = [...ordenTurnos].sort(() => 0.5 - Math.random()).slice(0, numImp);
-
-    channel.publish('start-game', { impostores, palabra, players: ordenTurnos });
+    const impostores = [...orden].sort(() => 0.5 - Math.random()).slice(0, numImp);
+    channel.publish('start-game', { impostores, palabra, players: orden });
 }
 
 function startGame(data) {
@@ -109,25 +102,15 @@ function startGame(data) {
     document.getElementById('screen-lobby').classList.add('hidden');
     document.getElementById('screen-game').classList.remove('hidden');
     document.getElementById('screen-end').classList.add('hidden');
-    document.getElementById('end-title').classList.remove('glitch');
     document.getElementById('chat-messages').innerHTML = '';
     
     const esImp = data.impostores.includes(username);
-    document.getElementById('role-message').innerHTML = esImp ? 
-        `<b style="color:#ef4444">IMPOSTOR</b>` : 
-        `<b style="color:#10b981">INOCENTE</b><br><small>Palabra: ${data.palabra}</small>`;
-    
+    document.getElementById('role-message').innerHTML = esImp ? `<b style="color:#ef4444">IMPOSTOR</b>` : `<b style="color:#10b981">INOCENTE: ${data.palabra}</b>`;
     turnIndex = 0;
     actualizarTurno();
 }
 
 function actualizarTurno() {
-    if(eliminated.includes(username)) {
-        document.getElementById('turn-indicator').innerText = "ELIMINADO (ESPECTADOR)";
-        document.getElementById('messageInput').disabled = true;
-        document.getElementById('sendBtn').disabled = true;
-        return;
-    }
     const actual = players[turnIndex];
     if(eliminated.includes(actual)) { nextTurn(); return; }
     const ind = document.getElementById('turn-indicator');
@@ -156,7 +139,6 @@ function nextTurn() {
     turnIndex++;
     if(turnIndex >= players.length) {
         if(!eliminated.includes(username)) document.getElementById('decision-panel').classList.remove('hidden');
-        document.getElementById('turn-indicator').innerText = "FIN DE RONDA";
     } else {
         actualizarTurno();
     }
@@ -173,21 +155,18 @@ function handleDecision(data) {
     const vivos = players.length - eliminated.length;
     if(decisiones.total >= vivos) {
         if(decisiones.votar >= decisiones.ronda) {
-            appendMsg({ user: "SISTEMA", text: "A VOTAR..." });
             if(!eliminated.includes(username)) abrirVotacion();
         } else {
-            turnIndex = 0;
-            decisiones = { ronda: 0, votar: 0, total: 0 };
+            turnIndex = 0; decisiones = { ronda: 0, votar: 0, total: 0 };
             actualizarTurno();
         }
     }
 }
 
 function abrirVotacion() {
-    const modal = document.getElementById('vote-modal');
-    modal.classList.remove('hidden');
+    document.getElementById('vote-modal').classList.remove('hidden');
     const vivos = players.filter(p => !eliminated.includes(p));
-    document.getElementById('vote-options').innerHTML = vivos.map(p => `<button class="vote" onclick="votarA('${p}')">${p}</button>`).join('');
+    document.getElementById('vote-options').innerHTML = vivos.map(p => `<button onclick="votarA('${p}')">${p}</button>`).join('');
 }
 
 function votarA(obj) {
@@ -198,32 +177,27 @@ function votarA(obj) {
 function handleExpulsion(data) {
     votosExp[data.obj] = (votosExp[data.obj] || 0) + 1;
     const total = Object.values(votosExp).reduce((a,b)=>a+b, 0);
-    const vivosCount = players.length - eliminated.length;
-
-    if(total >= vivosCount) {
-        const expulsado = Object.keys(votosExp).reduce((a,b)=>votosExp[a]>votosExp[b]?a:b);
-        eliminated.push(expulsado);
-        appendMsg({ user: "RESULTADO", text: `¡${expulsado} expulsado!` });
+    if(total >= (players.length - eliminated.length)) {
+        const exp = Object.keys(votosExp).reduce((a,b)=>votosExp[a]>votosExp[b]?a:b);
+        eliminated.push(exp);
         votosExp = {};
-        checkWin(expulsado);
+        checkWin();
     }
 }
 
-// --- RANKING Y VICTORIA ---
-async function checkWin(ultimo) {
+// --- VICTORIA Y RANKING ---
+async function checkWin() {
     const impVivos = roles.impostores.filter(i => !eliminated.includes(i));
     const inoVivos = players.filter(p => !roles.impostores.includes(p) && !eliminated.includes(p));
 
     if(impVivos.length === 0) {
-        const ganadoresIno = players.filter(p => !roles.impostores.includes(p));
-        await sumarPuntos(ganadoresIno, 100);
-        showEnd("¡GANAN INOCENTES!", "Impostores eliminados.");
+        await sumarPuntos(players.filter(p => !roles.impostores.includes(p)), 100);
+        showEnd("¡GANAN INOCENTES!");
     } else if(inoVivos.length <= impVivos.length) {
         await sumarPuntos(roles.impostores, 300);
-        showEnd("¡GANA IMPOSTOR!", "Ya no pueden ganar.");
+        showEnd("¡GANA IMPOSTOR!");
     } else {
-        turnIndex = 0;
-        decisiones = { ronda: 0, votar: 0, total: 0 };
+        turnIndex = 0; decisiones = { ronda: 0, votar: 0, total: 0 };
         actualizarTurno();
     }
 }
@@ -231,38 +205,32 @@ async function checkWin(ultimo) {
 async function sumarPuntos(lista, pts) {
     for (let pName of lista) {
         const { data } = await supabase.from('profiles').select('points').eq('username', pName).single();
-        if (data) {
-            await supabase.from('profiles').update({ points: data.points + pts }).eq('username', pName);
-        }
+        if (data) await supabase.from('profiles').update({ points: data.points + pts }).eq('username', pName);
     }
-    await mostrarRanking();
 }
 
-async function mostrarRanking() {
-    const { data: topPlayers } = await supabase.from('profiles').select('username, points').order('points', { ascending: false }).limit(5);
-    let rankingHTML = "<div class='ranking-kahoot'><h3>🏆 TOP 5 GLOBAL</h3>";
-    topPlayers.forEach((p, i) => {
-        rankingHTML += `<div class="rank-item"><span>${i+1}. ${p.username}</span> <b>${p.points} pts</b></div>`;
-    });
-    rankingHTML += "</div>";
-    document.getElementById('end-details').innerHTML = rankingHTML;
-}
-
-function showEnd(titulo, desc) {
+async function showEnd(titulo) {
     document.getElementById('screen-game').classList.add('hidden');
     document.getElementById('screen-end').classList.remove('hidden');
-    const t = document.getElementById('end-title');
-    t.innerText = titulo;
-    t.classList.add('glitch');
-    document.getElementById('end-details').innerText = desc;
+    document.getElementById('end-title').innerText = titulo;
+    
+    const { data: top } = await supabase.from('profiles').select('username, points').order('points', { ascending: false }).limit(5);
+    document.getElementById('end-details').innerHTML = `<h3>🏆 TOP 5 GLOBAL</h3>` + top.map((p, i) => `<div>${i+1}. ${p.username} - ${p.points} pts</div>`).join('');
+    
+    if(isHost) document.getElementById('btn-replay').classList.remove('hidden');
+}
+
+function publicarRegreso() { channel.publish('volver-lobby-global', {}); }
+function irAlLobby() {
+    document.getElementById('screen-end').classList.add('hidden');
+    document.getElementById('screen-lobby').classList.remove('hidden');
 }
 
 function appendMsg(data) {
     const box = document.getElementById('chat-messages');
     const div = document.createElement('div');
     div.className = `message ${data.user === username ? 'self' : 'other'}`;
-    if(data.user === "SISTEMA" || data.user === "RESULTADO") div.className = "message system-alert";
-    div.innerHTML = `<strong>${data.user}</strong>${data.text}`;
+    div.innerHTML = `<strong>${data.user}:</strong> ${data.text}`;
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
 }
